@@ -1,7 +1,7 @@
 #![no_std]
 
-use gstd::prelude::*;
 use gmeta::{In, InOut, Metadata, Out};
+use gstd::prelude::*;
 
 #[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
 pub struct PebblesInit {

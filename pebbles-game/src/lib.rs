@@ -25,18 +25,24 @@ fn get_game_state() -> &'static mut GameState {
     }
 }
 
-fn get_owner() -> ActorId {
-    unsafe { OWNER.take().expect("OWNER isn't initialized") }
-}
+// fn get_owner() -> ActorId {
+//     unsafe { OWNER.take().expect("OWNER isn't initialized") }
+// }
 
 fn turn_if_first_player_is_program() {
     let game_state = get_game_state();
     if game_state.first_player == Player::Program {
+        let random_count = get_random_u32() % get_game_state().max_pebbles_per_turn + 1;
         // gstd::debug!("FirstPlayer is program.");
-        let count = if game_state.difficulty == DifficultyLevel::Easy {
-            get_random_u32() % get_game_state().max_pebbles_per_turn + 1
-        } else {
-            get_random_u32() % get_game_state().max_pebbles_per_turn + 1
+        let count = match game_state.difficulty {
+            DifficultyLevel::Easy => random_count,
+            DifficultyLevel::Hard => {
+                if game_state.pebbles_remaining % (game_state.max_pebbles_per_turn + 1) == 0 {
+                    random_count
+                } else {
+                    game_state.pebbles_remaining % game_state.max_pebbles_per_turn
+                }
+            }
         };
         turn(count);
     }
@@ -45,7 +51,7 @@ fn turn_if_first_player_is_program() {
 fn turn(count: u32) {
     let game_state = get_game_state();
 
-    let count = count.min(game_state.max_pebbles_per_turn);
+    let count = count.clamp(1, game_state.max_pebbles_per_turn);
 
     gstd::debug!("Turn: count={count},player={:?}", game_state.first_player);
     game_state.pebbles_remaining = game_state.pebbles_remaining.saturating_sub(count);

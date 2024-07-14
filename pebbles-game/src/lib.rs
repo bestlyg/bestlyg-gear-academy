@@ -44,6 +44,8 @@ fn turn_if_first_player_is_program() {
 
 fn turn(count: u32) {
     let game_state = get_game_state();
+    
+    let count = count.min(game_state.max_pebbles_per_turn);
 
     gstd::debug!("Turn: count={count},player={:?}", game_state.first_player);
     game_state.pebbles_remaining = game_state.pebbles_remaining.saturating_sub(count);

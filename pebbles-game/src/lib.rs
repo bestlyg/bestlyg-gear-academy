@@ -33,7 +33,12 @@ fn turn_if_first_player_is_program() {
     let game_state = get_game_state();
     if game_state.first_player == Player::Program {
         // gstd::debug!("FirstPlayer is program.");
-        turn(get_random_u32() % get_game_state().max_pebbles_per_turn);
+        let count = if game_state.difficulty == DifficultyLevel::Easy {
+            get_random_u32() % get_game_state().max_pebbles_per_turn + 1
+        } else {
+            get_random_u32() % get_game_state().max_pebbles_per_turn + 1
+        };
+        turn(count);
     }
 }
 
@@ -63,6 +68,7 @@ fn turn(count: u32) {
             Player::Program => Player::User,
         };
     }
+
     gstd::debug!("After turn: state={:?}", get_game_state());
 }
 
@@ -110,6 +116,7 @@ unsafe extern "C" fn handle() {
             } else {
                 turn(count);
                 turn_if_first_player_is_program();
+                msg::reply("turned", 0).expect("Unable to send");
             }
         }
         PebblesAction::GiveUp => {
@@ -170,9 +177,8 @@ mod tests {
             let random_count = 1;
             let result = program.send(USER_OWNER, PebblesAction::Turn(random_count));
             let log: &[gtest::CoreLog] = result.log();
-
             if log.len() > 1 {
-                let payload = log[1].payload().to_vec();
+                let payload = log[0].payload().to_vec();
                 let mut data = &payload[..];
                 match PebblesEvent::decode(&mut data).expect("Decode error") {
                     PebblesEvent::CounterTurn(player, count) => {
@@ -185,9 +191,8 @@ mod tests {
                     }
                 }
             }
-
             if log.len() > 2 {
-                let payload = log[2].payload().to_vec();
+                let payload = log[1].payload().to_vec();
                 let mut data = &payload[..];
                 match PebblesEvent::decode(&mut data).expect("Decode error") {
                     PebblesEvent::CounterTurn(player, _) => {
@@ -218,7 +223,7 @@ mod tests {
             let log: &[gtest::CoreLog] = result.log();
 
             if log.len() > 1 {
-                let payload = log[1].payload().to_vec();
+                let payload = log[0].payload().to_vec();
                 let mut data = &payload[..];
                 match PebblesEvent::decode(&mut data).expect("Decode error") {
                     PebblesEvent::CounterTurn(player, count) => {
@@ -233,7 +238,7 @@ mod tests {
             }
 
             if log.len() > 2 {
-                let payload = log[2].payload().to_vec();
+                let payload = log[1].payload().to_vec();
                 let mut data = &payload[..];
                 match PebblesEvent::decode(&mut data).expect("Decode error") {
                     PebblesEvent::CounterTurn(player, _) => {
@@ -272,7 +277,10 @@ mod tests {
         let _ = program.send(PROGRAM_OWNER, PebblesAction::Restart(PEBBLES_INIT));
         let game_state: GameState = program.read_state(b"").unwrap();
         assert_eq!(game_state.pebbles_count, PEBBLES_INIT.pebbles_count);
-        assert_eq!(game_state.max_pebbles_per_turn, PEBBLES_INIT.max_pebbles_per_turn);
+        assert_eq!(
+            game_state.max_pebbles_per_turn,
+            PEBBLES_INIT.max_pebbles_per_turn
+        );
         assert_eq!(game_state.difficulty, PEBBLES_INIT.difficulty);
         assert_eq!(game_state.pebbles_remaining, game_state.pebbles_count);
     }

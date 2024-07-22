@@ -3,14 +3,14 @@
 use gmeta::{In, InOut, Metadata, Out};
 use gstd::prelude::*;
 
-#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+#[derive(Debug, Default, Clone, Encode, TypeInfo, Decode)]
 pub struct PebblesInit {
     pub difficulty: DifficultyLevel,
     pub pebbles_count: u32,
     pub max_pebbles_per_turn: u32,
 }
 
-#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
 pub enum DifficultyLevel {
     #[default]
     Easy,
@@ -21,20 +21,49 @@ pub enum DifficultyLevel {
 pub enum PebblesAction {
     Turn(u32),
     GiveUp,
-    Restart {
-        difficulty: DifficultyLevel,
-        pebbles_count: u32,
-        max_pebbles_per_turn: u32,
-    },
+    Restart(PebblesInit),
 }
 
-#[derive(Debug, Clone, Encode, Decode, TypeInfo)]
+#[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
 pub enum PebblesEvent {
-    CounterTurn(u32),
+    CounterTurn(Player, u32),
     Won(Player),
 }
 
-#[derive(Debug, Default, Clone, Encode, Decode, TypeInfo)]
+impl PebblesEvent {
+    pub fn is_user_turn(&self) -> bool {
+        self.is_counter_turn() && self.is_counter_turn_with_player(Player::User)
+    }
+    pub fn is_program_turn(&self) -> bool {
+        self.is_counter_turn() && self.is_counter_turn_with_player(Player::Program)
+    }
+    pub fn is_user_win(&self) -> bool {
+        self.is_won() && self.is_counter_turn_with_player(Player::User)
+    }
+    pub fn is_program_win(&self) -> bool {
+        self.is_won() && self.is_counter_turn_with_player(Player::Program)
+    }
+    pub fn is_counter_turn(&self) -> bool {
+        match self {
+            PebblesEvent::CounterTurn(_, _) => true,
+            PebblesEvent::Won(_) => false,
+        }
+    }
+    pub fn is_counter_turn_with_player(&self, player: Player) -> bool {
+        match self {
+            PebblesEvent::CounterTurn(cur, _) => *cur == player,
+            PebblesEvent::Won(cur) => *cur == player,
+        }
+    }
+    pub fn is_won(&self) -> bool {
+        match self {
+            PebblesEvent::CounterTurn(_, _) => false,
+            PebblesEvent::Won(_) => true,
+        }
+    }
+}
+
+#[derive(Copy, PartialEq, Eq, Debug, Default, Clone, Encode, Decode, TypeInfo)]
 pub enum Player {
     #[default]
     User,

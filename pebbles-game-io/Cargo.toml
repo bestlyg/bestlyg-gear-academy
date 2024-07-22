@@ -1,10 +1,10 @@
 [package]
 edition.workspace = true
+version.workspace = true
 name = "pebbles-game-io"
-version = "0.1.0"
 
 [dependencies]
-gstd.workspace = true
 gmeta.workspace = true
+gstd.workspace = true
 parity-scale-codec.workspace = true
 scale-info.workspace = true

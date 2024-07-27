@@ -1,14 +1,33 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+#![no_std]
+
+use gmeta::{InOut, Metadata};
+use gstd::{prelude::*, ActorId};
+
+pub struct WordleMetadata;
+
+impl Metadata for WordleMetadata {
+    type Init = ();
+    type Handle = InOut<Action, Event>;
+    type Others = ();
+    type Reply = ();
+    type Signal = ();
+    type State = ();
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+pub enum Action {
+    StartGame { user: ActorId },
+    CheckWord { user: ActorId, word: String },
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[derive(Debug, Clone, Encode, Decode, TypeInfo, PartialEq, Eq)]
+pub enum Event {
+    GameStarted {
+        user: ActorId,
+    },
+    WordChecked {
+        user: ActorId,
+        correct_positions: Vec<u8>,
+        contained_in_word: Vec<u8>,
+    },
 }

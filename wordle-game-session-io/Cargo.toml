@@ -11,4 +11,5 @@ version.workspace = true
 gmeta.workspace = true
 gstd.workspace = true
 parity-scale-codec.workspace = true
+wordle-game-io.workspace = true
 scale-info.workspace = true

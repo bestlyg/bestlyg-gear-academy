@@ -7500,6 +7500,7 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "tokio",
+ "wordle-game-io",
  "wordle-game-session-io",
 ]
 
@@ -7511,6 +7512,7 @@ dependencies = [
  "gstd",
  "parity-scale-codec",
  "scale-info",
+ "wordle-game-io",
 ]
 
 [[package]]

@@ -1,14 +1,76 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+#![no_std]
+
+use core::fmt::Display;
+
+use gmeta::{In, InOut, Metadata, Out};
+use gstd::{prelude::*, ActorId, MessageId, Vec};
+use ops::Deref;
+
+pub struct WordleSessionMetadata;
+
+impl Metadata for WordleSessionMetadata {
+    type Init = In<WordleInit>;
+    type Handle = ();
+    type Others = ();
+    type Reply = ();
+    type Signal = ();
+    type State = Out<WordleState>;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub enum WordleAction {
+    StartGame,
+    CheckWord(String),
+    CheckGameStatus,
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub struct WordleInit {
+    pub wordle_address: ActorId,
+    pub count_attempts: u32,
+}
+
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub struct WordleState {
+    pub wordle_address: ActorId,
+    pub status: WordleStatus,
+    pub count_attemps: u32,
+}
+
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub enum WordlePlayerStatus {
+    Win,
+    Loose,
+}
+
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub enum WordleStatus {
+    Init,
+    GameStartMessageSent {
+        orig_id: MessageId,
+        sent_id: MessageId,
+    },
+    GameStartMessageReceived {
+        event: wordle_game_io::Event,
+    },
+    GameStarted,
+    CheckWordMessageSent {
+        orig_id: MessageId,
+        sent_id: MessageId,
+    },
+    CheckWordMessageReceived {
+        event: wordle_game_io::Event,
+    },
+    GameOver(WordlePlayerStatus),
+}
+
+#[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
+pub enum WordleEvent {
+    WrongActionToTrigger(WordleState, WordleAction),
+    GameStartSuccess,
+    GameStartFail(wordle_game_io::Event),
+    CheckWordSuccess,
+    CheckWordFail(wordle_game_io::Event),
+    YouAreWin,
+    YouAreLoose,
 }

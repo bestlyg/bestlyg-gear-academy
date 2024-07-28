@@ -46,15 +46,20 @@ unsafe extern "C" fn handle() {
     let msg_id = msg::id();
     let state = get_wordle_state();
     let action: WordleAction = msg::load().expect("Failed to load payload");
-    state.action_list.push(action.clone());
 
     if action == WordleAction::CheckGameStatus {
-        match state.status {
-            WordleStatus::GameOver(_) => {}
-            _ => {
-                state.status = WordleStatus::GameOver(WordlePlayerStatus::Loose);
-            }
-        }
+        let status = match &state.status {
+            WordleStatus::GameOver(status) => status.clone(),
+            _ => WordlePlayerStatus::Loose,
+        };
+        msg::reply(
+            match status {
+                WordlePlayerStatus::Win => WordleEvent::YouAreWin,
+                WordlePlayerStatus::Loose => WordleEvent::YouAreLoose,
+            },
+            0,
+        )
+        .expect("Failed to reply");
         return;
     }
 
@@ -143,14 +148,13 @@ unsafe extern "C" fn handle() {
                     .expect("Failed to reply");
             }
         }
-        WordleStatus::GameOver(status) => msg::reply(
-            match status {
+        WordleStatus::GameOver(status) => {
+            let status = match status {
                 WordlePlayerStatus::Win => WordleEvent::YouAreWin,
                 WordlePlayerStatus::Loose => WordleEvent::YouAreLoose,
-            },
-            0,
-        )
-        .expect("Failed to reply"),
+            };
+            msg::reply(status, 0).expect("Failed to reply");
+        }
     };
 }
 
@@ -170,8 +174,8 @@ unsafe extern "C" fn handle_reply() {
 
             if let wordle_game_io::Event::WordChecked {
                 user: _,
-                correct_positions,
-                contained_in_word,
+                ref correct_positions,
+                ref contained_in_word,
             } = event
             {
                 if correct_positions.len() == COUNT_WORD && contained_in_word.len() == 0 {

@@ -2,6 +2,7 @@ use gtest::{Log, Program, System};
 use wordle_game_session_io::*;
 
 const COUNT_ATTEMPTS: u32 = 5;
+const DELAY_TIMEOUT: u32 = 1;
 const USER: u64 = 42;
 
 fn get_program(system: &System) -> Program {
@@ -23,6 +24,7 @@ fn get_program(system: &System) -> Program {
         WordleInit {
             wordle_address: wordle.id(),
             count_attempts: COUNT_ATTEMPTS,
+            delay_timeout: DELAY_TIMEOUT,
         },
     );
     assert!(!init_result.main_failed());
@@ -89,3 +91,18 @@ fn handle_you_are_loose() {
         .map(|_| program.send(USER, WordleAction::CheckWord("hhhhh".to_string())));
     assert!(results.last().unwrap().contains(&expected));
 }
+
+// #[test]
+// fn handle_timeout() {
+//     let system = System::new();
+//     let program = get_program(&system);
+//     let _ = program.send(USER, WordleAction::StartGame);
+
+//     std::thread::sleep(std::time::Duration::from_secs(10));
+
+//     let state: WordleState = program.read_state(b"").unwrap();
+//     assert_eq!(
+//         state.status,
+//         WordleStatus::GameOver(WordlePlayerStatus::Loose)
+//     );
+// }

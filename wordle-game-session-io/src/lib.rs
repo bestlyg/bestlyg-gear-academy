@@ -25,6 +25,7 @@ pub enum WordleAction {
 pub struct WordleInit {
     pub wordle_address: ActorId,
     pub count_attempts: u32,
+    pub delay_timeout: u32,
 }
 
 #[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]
@@ -32,6 +33,7 @@ pub struct WordleState {
     pub wordle_address: ActorId,
     pub status: WordleStatus,
     pub count_attemps: u32,
+    pub delay_timeout: u32,
 }
 
 #[derive(Encode, Decode, TypeInfo, Debug, PartialEq, Eq, Clone)]

@@ -9,7 +9,6 @@ use wordle_game_session_io::*;
 
 static mut WORDLE_STATE: Option<WordleState> = None;
 
-const DELAY_TIMEOUT: u32 = 200;
 const COUNT_WORD: usize = 5;
 
 fn get_wordle_state() -> &'static mut WordleState {
@@ -30,6 +29,7 @@ extern "C" fn init() {
             wordle_address: wordle_init.wordle_address,
             status: WordleStatus::Init,
             count_attemps: wordle_init.count_attempts,
+            delay_timeout: wordle_init.delay_timeout,
         })
     }
 }
@@ -71,11 +71,16 @@ unsafe extern "C" fn handle() {
     match &state.status {
         WordleStatus::Init => {
             if action == WordleAction::StartGame {
+                gstd::debug!(
+                    "send_delayed, to: {}, block: {}",
+                    exec::program_id(),
+                    state.delay_timeout
+                );
                 msg::send_delayed(
                     exec::program_id(),
                     WordleAction::CheckGameStatus,
                     0,
-                    DELAY_TIMEOUT,
+                    state.delay_timeout,
                 )
                 .expect("Failed to send");
 

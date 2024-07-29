@@ -24,6 +24,8 @@ extern "C" fn init() {
 extern "C" fn handle() {
     let action: Action = msg::load().expect("Unable to decode ");
     let wordle = unsafe { WORDLE.as_mut().expect("The program is not initialized") };
+    gstd::debug!("===[game handle]===");
+    gstd::debug!("action: {:?}", action);
 
     let reply = match action {
         Action::StartGame { user } => {

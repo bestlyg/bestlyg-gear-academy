@@ -1,10 +1,7 @@
 #![no_std]
 
-use core::fmt::Display;
-
-use gmeta::{In, InOut, Metadata, Out};
-use gstd::{prelude::*, ActorId, MessageId, Vec};
-use ops::Deref;
+use gmeta::{In, Metadata, Out};
+use gstd::{prelude::*, ActorId, MessageId};
 
 pub struct WordleSessionMetadata;
 
@@ -69,7 +66,7 @@ pub enum WordleEvent {
     WrongActionToTrigger(WordleState, WordleAction),
     GameStartSuccess,
     GameStartFail(wordle_game_io::Event),
-    CheckWordSuccess,
+    CheckWordSuccess(wordle_game_io::Event),
     CheckWordFail(wordle_game_io::Event),
     YouAreWin,
     YouAreLoose,

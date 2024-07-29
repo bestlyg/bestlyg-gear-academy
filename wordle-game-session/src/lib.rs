@@ -4,7 +4,6 @@ use gstd::{
     exec::{wait, wake},
     msg,
     prelude::*,
-    ActorId,
 };
 use wordle_game_session_io::*;
 
@@ -24,6 +23,7 @@ fn get_wordle_state() -> &'static mut WordleState {
 
 #[no_mangle]
 extern "C" fn init() {
+    gstd::debug!("===[program init]===");
     let wordle_init = msg::load::<WordleInit>().expect("Failed to load");
     unsafe {
         WORDLE_STATE = Some(WordleState {
@@ -36,6 +36,7 @@ extern "C" fn init() {
 
 #[no_mangle]
 unsafe extern "C" fn state() {
+    gstd::debug!("===[program state]===");
     let state = get_wordle_state();
     msg::reply(state, 0).expect("Unable to share the state");
 }
@@ -46,6 +47,10 @@ unsafe extern "C" fn handle() {
     let msg_id = msg::id();
     let state = get_wordle_state();
     let action: WordleAction = msg::load().expect("Failed to load payload");
+
+    gstd::debug!("===[program handle]===");
+    gstd::debug!("action = {:?}", action);
+    gstd::debug!("state = {:?}", state);
 
     if action == WordleAction::CheckGameStatus {
         let status = match &state.status {
@@ -112,17 +117,20 @@ unsafe extern "C" fn handle() {
                 msg::reply(WordleEvent::GameStartFail(event.clone()), 0).expect("Failed to reply");
             }
         },
-        WordleStatus::CheckWordMessageReceived { event } => match event {
-            wordle_game_io::Event::WordChecked {
-                user: _,
-                correct_positions: _,
-                contained_in_word: _,
-            } => {
-                state.status = WordleStatus::GameStarted;
-                msg::reply(WordleEvent::CheckWordSuccess, 0).expect("Failed to reply");
-            }
-            _ => {
-                msg::reply(WordleEvent::CheckWordFail(event.clone()), 0).expect("Failed to reply");
+        WordleStatus::CheckWordMessageReceived { event } => {
+            let send_event = event.clone();
+            match event {
+                wordle_game_io::Event::WordChecked {
+                    user: _,
+                    correct_positions: _,
+                    contained_in_word: _,
+                } => {
+                    state.status = WordleStatus::GameStarted;
+                    msg::reply(WordleEvent::CheckWordSuccess(send_event), 0).expect("Failed to reply");
+                }
+                _ => {
+                    msg::reply(WordleEvent::CheckWordFail(send_event), 0).expect("Failed to reply");
+                }
             }
         },
         WordleStatus::GameStarted => {
@@ -194,3 +202,6 @@ unsafe extern "C" fn handle_reply() {
         _ => todo!(),
     };
 }
+
+// #[cfg(test)]
+// mod tests;

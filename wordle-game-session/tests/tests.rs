@@ -6,9 +6,9 @@ const USER: u64 = 42;
 
 fn get_program(system: &System) -> Program {
     system.init_logger();
-    let session = Program::current(&system);
+    let session = Program::current(system);
     let wordle = Program::from_file(
-        &system,
+        system,
         "../target/wasm32-unknown-unknown/release/wordle_game.opt.wasm",
     );
 
@@ -86,7 +86,6 @@ fn handle_you_are_loose() {
 
     let expected = Log::builder().payload(WordleEvent::YouAreLoose);
     let results = (0..(COUNT_ATTEMPTS as usize))
-        .into_iter()
         .map(|_| program.send(USER, WordleAction::CheckWord("hhhhh".to_string())));
     assert!(results.last().unwrap().contains(&expected));
 }

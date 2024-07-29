@@ -88,7 +88,7 @@ unsafe extern "C" fn handle() {
 
                 state.status = WordleStatus::GameStartMessageSent {
                     orig_id: msg_id,
-                    sent_id: sent_id,
+                    sent_id,
                 };
 
                 wait();
@@ -126,13 +126,14 @@ unsafe extern "C" fn handle() {
                     contained_in_word: _,
                 } => {
                     state.status = WordleStatus::GameStarted;
-                    msg::reply(WordleEvent::CheckWordSuccess(send_event), 0).expect("Failed to reply");
+                    msg::reply(WordleEvent::CheckWordSuccess(send_event), 0)
+                        .expect("Failed to reply");
                 }
                 _ => {
                     msg::reply(WordleEvent::CheckWordFail(send_event), 0).expect("Failed to reply");
                 }
             }
-        },
+        }
         WordleStatus::GameStarted => {
             if let WordleAction::CheckWord(word) = action {
                 let sent_id = msg::send(
@@ -147,7 +148,7 @@ unsafe extern "C" fn handle() {
 
                 state.status = WordleStatus::CheckWordMessageSent {
                     orig_id: msg_id,
-                    sent_id: sent_id,
+                    sent_id,
                 };
 
                 wait();
@@ -186,7 +187,7 @@ unsafe extern "C" fn handle_reply() {
                 ref contained_in_word,
             } = event
             {
-                if correct_positions.len() == COUNT_WORD && contained_in_word.len() == 0 {
+                if correct_positions.len() == COUNT_WORD && contained_in_word.is_empty() {
                     state.status = WordleStatus::GameOver(WordlePlayerStatus::Win);
                     return;
                 } else {
